@@ -1,16 +1,13 @@
 "use client"
 
-import TriangleAnimation from '@/components/geom/TriangleAnimation'
-
-//TODO
+import Link from 'next/link'
 
 export default function TestPage() {
   return (
     <>
-      <TriangleAnimation />
-      <div>
+      <Link href="/">
         <h1>Divide Zero</h1>
-      </div>
+      </Link>
     </>
     
   )

@@ -1,22 +1,43 @@
+"use client"
+
 import React, { useRef, useEffect, useState } from "react";
-import { distFromCenter, drawTriangle, rand_int } from "./utils";
+import { distFromCenter, drawTriangle } from "./utils";
+import { useClickCanvas } from "@/hooks/useClickCanvas";
 
-//TODO1: 增加隨機性, 讓三角形擴散的更自然
+//TODO: 使用cursor控制三角形繪製區域,只有cursor匡選起來的區域才會繪製三角形
+//TODO: 狀態改成三種狀態, open, close, pending, 其中pending狀態的特效改為從左至右的pulsing, 需要新增一個cell屬性"c_scale", 當pulsing時, c_scale在1 ~ 1.2之間變化
 
-//TODO2: 元件改為overlay,並用使用framer-motion控制
+//TODO2: 元件改為overlay,流程為如果有滑鼠點擊位置,對應到元件的三角形index,並啟動遮蔽動畫,
+// 若沒有點擊位置, 則以預設的初始三角形為中心點啟動動畫, 一但讀取事件結束, 則啟動去除動畫,
+// 會應用到此動畫的元件: sideBar(大三角, 速度較快), darkModeToggle(小三角, 速度較慢, 不透明), 純過場動畫(中三角, 速度快)
 const cols = 20; // 設定列數
 const rows = 20; // 設定行數
-const cellWidth = 200; // 單元格寬度
+const cellWidth = 160; // 單元格寬度
 const cellHeight = Math.round(Math.sqrt(cellWidth * cellWidth - (cellWidth/2) * (cellWidth/2))); // 使用等邊三角形的高度計算公式
 const opacityStep = 4; // 不透明度變化步驟 (調大，減慢速度)
 const vertexStep = 4; // 頂點變化步驟 (調大，減慢速度)
 const frameDelay = 1; // 每隔幾幀執行更新
 
-const TriangleAnimation: React.FC = () => {
+interface TriangleAnimationProps {
+  /* autoCycle?: boolean;
+  triangleConfig? : 'sideBar' | 'darkModeToggle' | 'default'; */
+}
+
+const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
+  const {
+    animationRunning,
+    startCell,
+    status,
+    setAutoRefire,
+    autoRefire,
+    resetCells
+  } = useClickCanvas();
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spreadPathRef = useRef<Set<number>>(new Set());
+
   const cellsRef = useRef<Array<any>>(Array(rows * cols).fill(null).map((_) => [
-    0, 1,// c_opacity, t_opacity
+    0, .8, // c_opacity, t_opacity
     0, 1, // c_left, t_left
     0, 1, // c_right, t_right
     0, 1, // c_y, t_y
@@ -24,38 +45,48 @@ const TriangleAnimation: React.FC = () => {
     false, // s_override
     Math.random() * .5, // 添加新屬性：擴散延遲的隨機因子
   ]));
-  const [animationRunning, setAnimationRunning] = useState(true);
-  const [startCell, setStartCell] = useState<number | null>(null); // 存儲起始三角形
-  const [dark, setDark] = useState<boolean>(false); // 控制暗色或亮色
 
-  // 重置動畫
-  const resetAnimation = () => {
-    setAnimationRunning(false); // 停止動畫
-    const currentCells = cellsRef.current
+    // 添加 stable 狀態管理
+    const [stable, setStable] = useState(true);
 
-    // 反轉每個 cell 的目標值
+  // 添加重新觸發的計時器
+  useEffect(() => {
+    if (!autoRefire.auto || !stable) return;
+    
+    const timer = setTimeout(() => {
+      setAutoRefire({ auto: false, refireDelay: 0 });
+      resetCells();
+    }, autoRefire.refireDelay * 1000);
+
+    return () => clearTimeout(timer);
+  }, [stable, autoRefire.auto, autoRefire.refireDelay]);
+
+  // 監聽status的變化
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    
+    const currentCells = cellsRef.current;
+    // 反转每个 cell 的目标值
     const updatedCells = currentCells.map((cell, i) => {
       const [c_opacity, t_opacity, c_left, t_left, c_right, t_right, c_y, t_y, inited, s_override, spreadDelay] = cell;
 
       return [
-        c_opacity, 1 - t_opacity, // 反轉透明度目標
-        c_left, 1 - t_left,       // 反轉左比例目標  
-        c_right, 1 - t_right,     // 反轉右比例目標
-        c_y, 1 - t_y,             // 反轉Y比例目標
-        i === startCell || inited, // 保留已初始化的狀態
-        s_override,                // 保持覆蓋狀態
+        c_opacity, 1 - t_opacity, // 反转透明度目标
+        c_left, 1 - t_left,       // 反转左比例目标  
+        c_right, 1 - t_right,     // 反转右比例目标
+        c_y, 1 - t_y,             // 反转Y比例目标
+        i === startCell || inited, // 保留已初始化的状态
+        s_override,                // 保持覆盖状态
         spreadDelay,
       ];
     });
 
     cellsRef.current = updatedCells;
-    setDark((prev) => !prev); // 切換暗色和亮色
-    setAnimationRunning(true); // 重新啟動動畫
     spreadPathRef.current.clear();
     if (startCell !== null) {
       spreadPathRef.current.add(startCell);
     }
-  };
+  }, [status, startCell]);
 
   // 動畫邏輯
   useEffect(() => {
@@ -78,7 +109,8 @@ const TriangleAnimation: React.FC = () => {
     const centerY = startCell ? Math.floor(startCell / cols) * cellHeight : canvas.height / 2;
 
     // 顏色設定
-    const initialColor = [87 / 255, 84 / 255, 74 / 255];
+    //const initialColor = status === 'open' ? [218/255, 212/255, 187/255] : [87/255, 84/255, 74/255]
+    const initialColor = [87/255, 84/255, 74/255]
 
     const animate = (timestamp: number) => {
       frameCount++;
@@ -92,6 +124,7 @@ const TriangleAnimation: React.FC = () => {
 
       const elapsedTime = (timestamp - startTime) / 1000;
 
+      if (!cellsRef?.current) return;
       const updatedCells = cellsRef.current.map((cell, i) => {
         const x = i % cols;
         const y = Math.floor(i / cols);
@@ -123,7 +156,8 @@ const TriangleAnimation: React.FC = () => {
         }
 
         const randomDelay = cell[10] || 0;
-        const baseDelay = distance / (cellWidth * 5);
+        //增加cellWidth的乘數, 使三角形擴散速度變快
+        const baseDelay = distance / (cellWidth * 10);
         const finalDelay = baseDelay + randomDelay;
 
         if (elapsedTime < finalDelay) {
@@ -149,7 +183,7 @@ const TriangleAnimation: React.FC = () => {
           opacityStep;
         }
 
-        if (dark) {
+        if (status === 'close') {
           if (isLeftSide) {
             if (Math.abs(c_right - t_right) > 0.001) {
               stable = false;
@@ -209,42 +243,18 @@ const TriangleAnimation: React.FC = () => {
 
       if (!stable) {
         animationFrameId = requestAnimationFrame(animate);
+      } else {
+        // 當動畫完成時，設置 stable 狀態
+        setStable(true);
       }
     };
 
-    animationFrameId = requestAnimationFrame(animate); // 啟動動畫
+    animationFrameId = requestAnimationFrame(animate);
 
     return () => {
-      cancelAnimationFrame(animationFrameId); // 停止動畫
-      //canvas.style.display = "none";
+      cancelAnimationFrame(animationFrameId);
     };
-  }, [animationRunning, dark]);
-
-  // 在 useEffect 中添加點擊事件監聽器
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const handleClick = (event: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      // 計算點擊的三角形索引
-      const col = Math.floor(x / (cellWidth / 2));
-      const row = Math.floor(y / cellHeight);
-      const index = row * cols + col;
-
-      setStartCell(index); // 設置起始三角形
-      resetAnimation(); // 重置動畫
-    };
-
-    canvas.addEventListener('click', handleClick);
-
-    return () => {
-      canvas.removeEventListener('click', handleClick);
-    };
-  }, [canvasRef, resetAnimation]);
+  }, [animationRunning, status]);
 
   if (!window) return null;
 
@@ -253,14 +263,7 @@ const TriangleAnimation: React.FC = () => {
       ref={canvasRef}
       width={window.innerWidth}
       height={window.innerHeight}
-      style={{
-        //background: "#f4f0e1",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      }}
+      className="fixed inset-0 w-full h-full m-0 p-0 pointer-events-none z-overlay"
     ></canvas>
   );
 };

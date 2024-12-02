@@ -84,11 +84,9 @@ const drawTriangle = (
   context.fill();
 };
 
-const rand_int = (a: number, b: number) => Math.round(Math.random() * (b - a) + a);
-
 const distFromCenter = (x: number, y: number, centerX: number, centerY: number) => {
   return Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
 };
 
 
-export { get_cursor, rand_int, distFromCenter, drawTriangle, pos_mapper };
+export { get_cursor, distFromCenter, drawTriangle, pos_mapper };
