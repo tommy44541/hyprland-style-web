@@ -7,16 +7,8 @@ import { useClickCanvas } from "@/hooks/useClickCanvas";
 //TODO: 使用cursor控制三角形繪製區域,只有cursor匡選起來的區域才會繪製三角形
 //TODO: 狀態改成三種狀態, open, close, pending, 其中pending狀態的特效改為從左至右的pulsing, 需要新增一個cell屬性"c_scale", 當pulsing時, c_scale在1 ~ 1.2之間變化
 
-//TODO2: 元件改為overlay,流程為如果有滑鼠點擊位置,對應到元件的三角形index,並啟動遮蔽動畫,
-// 若沒有點擊位置, 則以預設的初始三角形為中心點啟動動畫, 一但讀取事件結束, 則啟動去除動畫,
 // 會應用到此動畫的元件: sideBar(大三角, 速度較快), darkModeToggle(小三角, 速度較慢, 不透明), 純過場動畫(中三角, 速度快)
-const cols = 20; // 設定列數
-const rows = 20; // 設定行數
-const cellWidth = 160; // 單元格寬度
-const cellHeight = Math.round(Math.sqrt(cellWidth * cellWidth - (cellWidth/2) * (cellWidth/2))); // 使用等邊三角形的高度計算公式
-const opacityStep = 4; // 不透明度變化步驟 (調大，減慢速度)
-const vertexStep = 4; // 頂點變化步驟 (調大，減慢速度)
-const frameDelay = 1; // 每隔幾幀執行更新
+
 
 interface TriangleAnimationProps {
   /* autoCycle?: boolean;
@@ -25,6 +17,7 @@ interface TriangleAnimationProps {
 
 const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
   const {
+    triangleConfig,
     animationRunning,
     startCell,
     status,
@@ -32,6 +25,8 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     autoRefire,
     resetCells
   } = useClickCanvas();
+
+  const { cols, rows, cellWidth, cellHeight, opacityStep, vertexStep, frameDelay } = triangleConfig;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spreadPathRef = useRef<Set<number>>(new Set());

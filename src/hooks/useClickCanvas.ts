@@ -1,6 +1,17 @@
 import { create } from "zustand"
 
+
+
 interface ClickCanvasState {
+  triangleConfig: {
+    cols: number;
+    rows: number;
+    cellWidth: number;
+    cellHeight: number;
+    opacityStep: number;
+    vertexStep: number;
+    frameDelay: number;
+  };
   animationRunning: boolean;
   setAnimationRunning: (value: boolean) => void;
   startCell: number | null;
@@ -16,7 +27,18 @@ interface ClickCanvasState {
   setAutoRefire: (value: { auto: boolean; refireDelay: number }) => void;
 }
 
+const CELL_WIDTH = 160;
+
 export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
+  triangleConfig: {
+    cols: 20,
+    rows: 20,
+    cellWidth: CELL_WIDTH,
+    cellHeight: Math.round(Math.sqrt(CELL_WIDTH * CELL_WIDTH - (CELL_WIDTH/2) * (CELL_WIDTH/2))),
+    opacityStep: 4,
+    vertexStep: 4,
+    frameDelay: 1,
+  },
   animationRunning: false,
   setAnimationRunning: (value: boolean) => set({ animationRunning: value }),
   startCell: null,
@@ -31,12 +53,10 @@ export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
     });
   },
   triggerAnimation: (x: number, y: number) => {
-    const { status, animationRunning } = get()
-    
-    const cols = 20;
-    const cellWidth = 160;
-    const cellHeight = Math.round(Math.sqrt(cellWidth * cellWidth - (cellWidth/2) * (cellWidth/2)));
-    
+    const { status, animationRunning, triangleConfig } = get()
+
+    const { cols, cellWidth, cellHeight } = triangleConfig;
+
     const col = Math.floor(x / (cellWidth / 2));
     const row = Math.floor(y / cellHeight);
     const index = row * cols + col;
