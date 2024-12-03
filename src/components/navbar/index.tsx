@@ -1,23 +1,24 @@
 "use client"
-import { useClickCanvas } from "../../hooks/useClickCanvas";
+import { YorhaNavLink } from "./nav-link";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
 const Navbar = () => {
-  const { triggerAnimation, setAutoRefire, status } = useClickCanvas();
-  const handleClick = (event: React.MouseEvent) => {
-    // 获取点击位置相对于视口的坐标
-    const x = event.clientX;
-    const y = event.clientY;
-    //setAutoRefire({ auto: true, refireDelay: 2 });
-    // 触发动画
-    triggerAnimation(x, y);
-  };
   return (
-    <nav>
-      <div className="z-navbar flex justify-between gap-4 items-center w-full border-b border-gray-200 py-2">
-        <div className="cursor-pointer" onClick={handleClick}>route1 </div>
-        <div className="cursor-pointer" onClick={handleClick}>route2</div>
-        <div className="cursor-pointer" onClick={handleClick}>route3</div>
+    <nav className="overflow-auto border-b border-[#57544a]">
+      <div className="z-navbar flex gap-4 items-center w-full py-1 px-4">
+        <YorhaNavLink to="/" text="home" />
+        <YorhaNavLink to="/particle" text="particle" />
+        <YorhaNavLink to="/world" text="world" />
+        <YorhaNavLink to="/gallery" text="gallery" />
+        <Avatar className="ml-auto cursor-pointer">
+          <AvatarImage src="/skull_1.jpg" className="mix-blend-lighten"/>
+          <AvatarFallback>T</AvatarFallback>
+        </Avatar>
       </div>
-      <div className="absolute left-4 w-full h-2 bg-gradient-to-r from-black/70 from-[14%] to-transparent to-0% bg-[length:50px_4px] bg-repeat-x"/>
+      <div className="absolute w-full h-2 bg-gradient-to-r from-[#57544a] from-[14%] to-transparent to-0% bg-[length:50px_4px] bg-repeat-x"/>
     </nav>
   )
 }

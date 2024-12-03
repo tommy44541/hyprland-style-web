@@ -6,11 +6,13 @@ interface ClickCanvasState {
   triangleConfig: {
     cols: number;
     rows: number;
+    opacity: number;
     cellWidth: number;
     cellHeight: number;
     opacityStep: number;
     vertexStep: number;
     frameDelay: number;
+    animateSpeed: number;
   };
   animationRunning: boolean;
   setAnimationRunning: (value: boolean) => void;
@@ -33,11 +35,13 @@ export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
   triangleConfig: {
     cols: 20,
     rows: 20,
+    opacity: .8,
     cellWidth: CELL_WIDTH,
     cellHeight: Math.round(Math.sqrt(CELL_WIDTH * CELL_WIDTH - (CELL_WIDTH/2) * (CELL_WIDTH/2))),
     opacityStep: 4,
     vertexStep: 4,
     frameDelay: 1,
+    animateSpeed: 30
   },
   animationRunning: false,
   setAnimationRunning: (value: boolean) => set({ animationRunning: value }),

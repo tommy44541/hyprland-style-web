@@ -26,19 +26,19 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     resetCells
   } = useClickCanvas();
 
-  const { cols, rows, cellWidth, cellHeight, opacityStep, vertexStep, frameDelay } = triangleConfig;
+  const { cols, rows, opacity, cellWidth, cellHeight, opacityStep, vertexStep, frameDelay, animateSpeed } = triangleConfig;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spreadPathRef = useRef<Set<number>>(new Set());
 
   const cellsRef = useRef<Array<any>>(Array(rows * cols).fill(null).map((_) => [
-    0, .8, // c_opacity, t_opacity
+    0, opacity, // c_opacity, t_opacity
     0, 1, // c_left, t_left
     0, 1, // c_right, t_right
     0, 1, // c_y, t_y
     null,
     false, // s_override
-    Math.random() * .5, // 添加新屬性：擴散延遲的隨機因子
+    Math.random() * .5, //擴散延遲的隨機因子
   ]));
 
     // 添加 stable 狀態管理
@@ -105,7 +105,7 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
 
     // 顏色設定
     //const initialColor = status === 'open' ? [218/255, 212/255, 187/255] : [87/255, 84/255, 74/255]
-    const initialColor = [87/255, 84/255, 74/255]
+    const initialColor = [87 / 255, 84 / 255, 74 / 255]
 
     const animate = (timestamp: number) => {
       frameCount++;
@@ -152,7 +152,7 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
 
         const randomDelay = cell[10] || 0;
         //增加cellWidth的乘數, 使三角形擴散速度變快
-        const baseDelay = distance / (cellWidth * 10);
+        const baseDelay = distance / (cellWidth * animateSpeed);
         const finalDelay = baseDelay + randomDelay;
 
         if (elapsedTime < finalDelay) {
