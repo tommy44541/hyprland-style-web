@@ -9,13 +9,13 @@ import ServicePage from '@/features/static-page/service';
 
 export const sections = [
   <HomePage />,
-  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>
-    information
-  </div>,
-  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>character page</div>,
   <ServicePage />,
-  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>css blend mode showcase</div>,
-  <div className='h-screen pt-24 pl-4 z-10 bg-slate-400 whitespace-nowrap'>full screen showcase</div>,
+  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
+  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
+  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
+  <div className='h-screen pt-24 pl-4 z-10 bg-slate-400 whitespace-nowrap'>
+    full screen showcase, to be continue
+  </div>,
 ]
 
 export default function Page() {
