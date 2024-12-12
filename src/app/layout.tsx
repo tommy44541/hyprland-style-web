@@ -1,6 +1,11 @@
 import Navbar from '@/components/navbar'
-import TriangleAnimation from '@/components/geom/TriangleAnimation'
+import TriangleOverlap from '@/components/geom/TriangleOverlap'
+import { Inter } from "next/font/google";
 import './globals.css'
+import { cn } from '@/lib/utils';
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
@@ -9,10 +14,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <TriangleAnimation />
-        <Navbar />
-        {children}
+      <body className={cn(
+        inter.className,
+        "antialiased min-h-screen bg-no-repeat bg-fixed bg-center bg-cover bg-light-nier dark:bg-dark-nier z-[-1] before:min-h-screen before:z-[-1] before:fixed before:inset-0")}
+      >
+        <NuqsAdapter>
+          <TriangleOverlap />
+          <Navbar />
+          {children}
+        </NuqsAdapter>
       </body>
     </html>
   )

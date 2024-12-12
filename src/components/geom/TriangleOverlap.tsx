@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useRef, useEffect, useState } from "react";
-import { distFromCenter, drawTriangle } from "./utils";
+import React, { useRef, useEffect } from "react";
 import { useClickCanvas } from "@/hooks/useClickCanvas";
+import { cn } from "@/lib/utils";
 
 //TODO: 使用cursor控制三角形繪製區域,只有cursor匡選起來的區域才會繪製三角形
 //TODO: 狀態改成三種狀態, open, close, pending, 其中pending狀態的特效改為從左至右的pulsing, 需要新增一個cell屬性"c_scale", 當pulsing時, c_scale在1 ~ 1.2之間變化
@@ -11,8 +11,7 @@ import { useClickCanvas } from "@/hooks/useClickCanvas";
 
 
 interface TriangleAnimationProps {
-  /* autoCycle?: boolean;
-  triangleConfig? : 'sideBar' | 'darkModeToggle' | 'default'; */
+
 }
 
 const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
@@ -21,9 +20,6 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     animationRunning,
     startCell,
     status,
-    setAutoRefire,
-    autoRefire,
-    resetCells
   } = useClickCanvas();
 
   const { cols, rows, opacity, cellWidth, cellHeight, opacityStep, vertexStep, frameDelay, animateSpeed } = triangleConfig;
@@ -40,21 +36,6 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     false, // s_override
     Math.random() * .5, //擴散延遲的隨機因子
   ]));
-
-    // 添加 stable 狀態管理
-    const [stable, setStable] = useState(true);
-
-  // 添加重新觸發的計時器
-  useEffect(() => {
-    if (!autoRefire.auto || !stable) return;
-    
-    const timer = setTimeout(() => {
-      setAutoRefire({ auto: false, refireDelay: 0 });
-      resetCells();
-    }, autoRefire.refireDelay * 1000);
-
-    return () => clearTimeout(timer);
-  }, [stable, autoRefire.auto, autoRefire.refireDelay]);
 
   // 監聽status的變化
   useEffect(() => {
@@ -104,7 +85,9 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     const centerY = startCell ? Math.floor(startCell / cols) * cellHeight : canvas.height / 2;
 
     // 顏色設定
-    //const initialColor = status === 'open' ? [218/255, 212/255, 187/255] : [87/255, 84/255, 74/255]
+    //const initialColor = status === 'open' ? [87/255, 84/255, 74/255] : [218/255, 212/255, 187/255]
+    //const borderColor = status === 'open' ? [218/255, 212/255, 187/255] : [87/255, 84/255, 74/255]
+    const borderColor = [218/255, 212/255, 187/255]
     const initialColor = [87 / 255, 84 / 255, 74 / 255]
 
     const animate = (timestamp: number) => {
@@ -155,15 +138,16 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
         const baseDelay = distance / (cellWidth * animateSpeed);
         const finalDelay = baseDelay + randomDelay;
 
-        if (elapsedTime < finalDelay) {
+        if (elapsedTime < finalDelay && !stable) {
           stable = false;
           drawTriangle(
             context,
             x * (cellWidth / 2),
             y * cellHeight,
-            cellWidth - 3,
-            cellHeight - 1.5,
+            cellWidth,
+            cellHeight,
             [initialColor[0], initialColor[1], initialColor[2], c_opacity],
+            [borderColor[0], borderColor[1], borderColor[2], c_opacity],
             (x % 2 === 0) !== (y % 2 === 0),
             c_left,
             c_right,
@@ -222,9 +206,10 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
           context,
           x * (cellWidth / 2),
           y * cellHeight,
-          cellWidth - 3,
-          cellHeight - 1.5,
+          cellWidth,
+          cellHeight,
           [initialColor[0], initialColor[1], initialColor[2], c_opacity],
+          [borderColor[0], borderColor[1], borderColor[2], c_opacity],
           (x % 2 === 0) !== (y % 2 === 0),
           c_left,
           c_right,
@@ -240,7 +225,7 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
         animationFrameId = requestAnimationFrame(animate);
       } else {
         // 當動畫完成時，設置 stable 狀態
-        setStable(true);
+        stable = true
       }
     };
 
@@ -251,16 +236,102 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     };
   }, [animationRunning, status]);
 
-  if (!window) return null;
-
   return (
     <canvas
       ref={canvasRef}
       width={window.innerWidth}
       height={window.innerHeight}
-      className="fixed inset-0 w-full h-full m-0 p-0 pointer-events-none z-overlay"
+      className={cn("fixed inset-0 w-full h-full m-0 p-0 z-overlay",
+        status === 'close' && "pointer-events-none"
+      )}
     ></canvas>
   );
 };
 
 export default TriangleAnimation;
+
+function drawTriangle(
+  context: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  color: [number, number, number, number],
+  borderColor: [number, number, number, number],
+  inverted: boolean,
+  leftRatio: number,
+  rightRatio: number,
+  yRatio: number,
+){
+  // 如果任何一個比率太小，就不繪製
+  if (leftRatio <= 0.001 || rightRatio <= 0.001 || yRatio <= 0.001) {
+    return;
+  }
+
+  context.fillStyle = `rgba(${color[0] * 255}, ${color[1] * 255}, ${color[2] * 255}, ${color[3]})`;
+
+  // 計算三角形的頂點位置
+  let leftPoint, rightPoint, yPoint;
+  if (inverted) {
+    // 倒置三角形的頂點計算
+    leftPoint = [centerX - width/2, centerY + height/2];
+    rightPoint = [centerX + width/2, centerY + height/2];
+    yPoint = [centerX, centerY - height/2];
+  } else {
+    // 正置三角形的頂點計算
+    leftPoint = [centerX - width/2, centerY - height/2];
+    rightPoint = [centerX + width/2, centerY - height/2];
+    yPoint = [centerX, centerY + height/2];
+  }
+
+  // 應用頂點變換
+  if (leftRatio < 1) {
+    let vector_left_right = [(rightPoint[0] - leftPoint[0]) * (1 - leftRatio), (rightPoint[1] - leftPoint[1]) * (1 - leftRatio)];
+    let vector_left_y = [(yPoint[0] - leftPoint[0]) * (1 - leftRatio), (yPoint[1] - leftPoint[1]) * (1 - leftRatio)];
+    leftPoint = [
+      leftPoint[0] + vector_left_right[0]/2 + vector_left_y[0]/2,
+      leftPoint[1] + vector_left_right[1]/2 + vector_left_y[1]/2
+    ];
+  }
+  
+  if (rightRatio < 1) {
+    let vector_right_left = [(leftPoint[0] - rightPoint[0]) * (1 - rightRatio), (leftPoint[1] - rightPoint[1]) * (1 - rightRatio)];
+    let vector_right_y = [(yPoint[0] - rightPoint[0]) * (1 - rightRatio), (yPoint[1] - rightPoint[1]) * (1 - rightRatio)];
+    rightPoint = [
+      rightPoint[0] + vector_right_left[0]/2 + vector_right_y[0]/2,
+      rightPoint[1] + vector_right_left[1]/2 + vector_right_y[1]/2
+    ];
+  }
+
+  if (yRatio < 1) {
+    let vector_y_left = [(leftPoint[0] - yPoint[0]) * (1 - yRatio), (leftPoint[1] - yPoint[1]) * (1 - yRatio)];
+    let vector_y_right = [(rightPoint[0] - yPoint[0]) * (1 - yRatio), (rightPoint[1] - yPoint[1]) * (1 - yRatio)];
+    yPoint = [
+      yPoint[0] + vector_y_left[0]/2 + vector_y_right[0]/2,
+      yPoint[1] + vector_y_left[1]/2 + vector_y_right[1]/2
+    ];
+  }
+
+  // 繪製三角形
+  context.beginPath();
+  context.moveTo(leftPoint[0], leftPoint[1]);
+  context.lineTo(rightPoint[0], rightPoint[1]);
+  context.lineTo(yPoint[0], yPoint[1]);
+  context.closePath();
+  context.fill();
+
+  context.strokeStyle = `rgba(${borderColor[0] * 255}, ${borderColor[1] * 255}, ${borderColor[2] * 255}, ${borderColor[3]}`;
+  context.lineWidth = .5;
+  context.stroke();
+};
+
+function distFromCenter(x: number, y: number, centerX: number, centerY: number){
+  return Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+};
+
+/* function pos_mapper(x: number,y:number,size1_x:number,size1_y:number,size2_x:number,size2_y:number){
+  let x_ratio = x/size1_x;
+  let y_ratio = y/size1_y;
+
+  return [x_ratio*size2_x,y_ratio*size2_y];
+} */

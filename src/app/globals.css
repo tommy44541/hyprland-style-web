@@ -3,33 +3,15 @@
 @tailwind utilities;
 
 body {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  /* TODO: dark mode change to /nier_dark.png */
-  background-image: url('/nier_light.png');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-position: center;
-  background-size: cover;
-  z-index: -1;
   /* 格紋稿紙背景 */
   &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
     background-image:
       linear-gradient(to bottom, #00000005 1px, transparent 1px),
       linear-gradient(to right, #00000005 1px, transparent 1px);
     background-size:
       5px 5px,
       5px 5px;
-    z-index: inherit;
   }
-  
 }
 
 @layer base {
@@ -86,7 +68,6 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-  
   }
   
 }
@@ -101,4 +82,13 @@ body {
   
   }
   
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

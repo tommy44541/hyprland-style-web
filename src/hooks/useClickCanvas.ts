@@ -1,35 +1,31 @@
 import { create } from "zustand"
 
-
+interface TriangleConfig {
+  cols: number;
+  rows: number;
+  opacity: number;
+  cellWidth: number;
+  cellHeight: number;
+  opacityStep: number;
+  vertexStep: number;
+  frameDelay: number;
+  animateSpeed: number;
+}
 
 interface ClickCanvasState {
-  triangleConfig: {
-    cols: number;
-    rows: number;
-    opacity: number;
-    cellWidth: number;
-    cellHeight: number;
-    opacityStep: number;
-    vertexStep: number;
-    frameDelay: number;
-    animateSpeed: number;
-  };
+  triangleConfig: TriangleConfig;
   animationRunning: boolean;
   setAnimationRunning: (value: boolean) => void;
   startCell: number | null;
   setStartCell: (value: number | null) => void;
-  status: "open" | "pending" | "close";
-  setStatus: (value: "open" | "pending" | "close") => void;
+  //動畫啟動/關閉
+  status: "open" | "close";
+  setStatus: (value: "open" | "close") => void;
   triggerAnimation: (x: number, y: number) => void;
-  resetCells: () => void;
-  autoRefire: {
-    auto: boolean;
-    refireDelay: number;
-  };
-  setAutoRefire: (value: { auto: boolean; refireDelay: number }) => void;
+  resetCells: (nextAction?: any) => void;
 }
 
-const CELL_WIDTH = 160;
+const CELL_WIDTH = 200;
 
 export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
   triangleConfig: {
@@ -41,20 +37,21 @@ export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
     opacityStep: 4,
     vertexStep: 4,
     frameDelay: 1,
-    animateSpeed: 30
+    animateSpeed: 50,
   },
   animationRunning: false,
   setAnimationRunning: (value: boolean) => set({ animationRunning: value }),
   startCell: null,
   setStartCell: (value: number | null) => set({ startCell: value }),
   status: "close",
-  setStatus: (value: "open" | "pending" | "close") => set({ status: value }),
-  resetCells: () => {
+  setStatus: (value: "open" | "close") => set({ status: value }),
+  resetCells: (nextAction) => {
     const { status } = get();
     set({ 
       status: status === 'open' ? 'close' : 'open',
       animationRunning: true 
     });
+    nextAction && nextAction()
   },
   triggerAnimation: (x: number, y: number) => {
     const { status, animationRunning, triangleConfig } = get()
@@ -78,10 +75,4 @@ export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
       });
     }
   },
-  autoRefire: {
-    auto: false,
-    refireDelay: 2
-  },
-  setAutoRefire: (value: { auto: boolean; refireDelay: number }) => 
-    set({ autoRefire: value }),
 }))
