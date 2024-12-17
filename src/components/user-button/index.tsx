@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useClickCanvas } from "@/hooks/useClickCanvas";
+import { useClickOverlap } from "@/hooks/use-click-overlap";
 
 import { LogOut } from "lucide-react";
 
@@ -12,7 +12,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 const UserButton = () => {
-  const { triggerAnimation, resetCells } = useClickCanvas();
+  const { triggerAnimation } = useClickOverlap();
 
   const [userDropdownShow, setUserDropdownShow] = useState(false)
 
@@ -21,8 +21,6 @@ const UserButton = () => {
       const x = event.clientX;
       const y = event.clientY;
       triggerAnimation(x, y);
-    } else {
-      resetCells()
     }
     setUserDropdownShow(prev => !prev)
   }

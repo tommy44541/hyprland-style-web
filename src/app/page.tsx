@@ -9,7 +9,8 @@ import ServicePage from '@/features/static-page/service';
 
 export const sections = [
   <HomePage />,
-  <ServicePage />,
+  //<ServicePage />,
+  <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
   <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
   <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
   <div className='h-screen pt-24 pl-4 whitespace-nowrap'>to be continue</div>,
@@ -31,7 +32,9 @@ export default function Page() {
       event.preventDefault()
       if (isScrolling) return; // 防止多次觸發
 
-      if (event.deltaY > 0) {
+      const { deltaY } = event
+
+      if (deltaY > 0) {
         // Scroll Down
         if(currentIndex < sections.length - 1 && !showFooter){
           setPrevIndex(currentIndex)
@@ -39,7 +42,8 @@ export default function Page() {
         } else {
           setShowFooter(true)
         }
-      } else if (event.deltaY < 0) {
+      }
+      else if (deltaY < 0) {
         // Scroll Up
         if(currentIndex > 0 && !showFooter){
           setPrevIndex(currentIndex)
@@ -48,6 +52,7 @@ export default function Page() {
           setShowFooter(false)
         }        
       }
+
       setIsScrolling(true)
     };
   
@@ -59,7 +64,7 @@ export default function Page() {
       return () => {
         window.removeEventListener('wheel', handleWheel);
       };
-    }, [currentIndex, isScrolling]);
+    }, [currentIndex, isScrolling, showFooter]);
 
     useEffect(() => {
       // 防抖，解鎖滾動
@@ -83,16 +88,16 @@ export default function Page() {
           {/* 右方裝飾線-僅透過z-index控制顯示 */}
           <div className="h-screen border-l-[1px] absolute right-32 border-nierDark/30 z-0"/>
           {/* 右方動態頁碼 */}
-          <div className={cn("absolute right-0 top-[30%] w-32 h-full z-20 transition-all duration-200 ease-linear bg-transparent",
-            currentIndex === 0 && "bg-sky-500/30"
+          <div className={cn("absolute right-0 top-1/3 w-32 h-full z-20 transition-all duration-200 ease-linear bg-transparent",
+            currentIndex === 0 && "bg-sky-500/30",
           )}>
             <div className="flex flex-col justify-center">
               <div className='relative overflow-y-hidden h-8'>
                 <p className={cn("absolute w-full top-0 left-4 text-4xl font-extrabold text-sky-500 transition-all duration-500 ease-in-out fill-mode-forwards",
                   /* 下一頁->向上淡入 上一頁->向下淡入*/
-                 isScrolling ? 
+                  isScrolling ? 
                   currentIndex > prevIndex ? "animate-page-transition-leave" : "animate-page-transition-leave-reverse" :
-                  currentIndex > prevIndex ? "animate-page-transition-enter" : "animate-page-transition-enter-reverse"
+                  currentIndex > prevIndex ? "animate-page-transition-enter" : "animate-page-transition-enter-reverse",
                 )}>
                   0{isScrolling && !showFooter ? prevIndex : currentIndex}
                 </p>
@@ -134,7 +139,8 @@ export default function Page() {
           <ChevronsUpIcon className='animate-bounce absolute bottom-6 left-1/2 text-nierDark'/>
         : <ChevronsDownIcon className='animate-bounce absolute bottom-6 left-1/2 text-nierDark'/>}
         <div className="bg-gray-300 text-gray-700 flex items-center justify-center text-xl h-32">
-           This is the Footer
+            {/* generate a footer section */}
+            footer content
         </div>
       </div>
   );

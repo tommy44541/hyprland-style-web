@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn(
         inter.className,
-        "antialiased min-h-screen bg-no-repeat bg-fixed bg-center bg-cover bg-light-nier dark:bg-dark-nier z-[-1] before:min-h-screen before:z-[-1] before:fixed before:inset-0")}
+        "antialiased min-h-screen bg-no-repeat bg-fixed bg-center bg-cover bg-light-nier dark:bg-dark-nier before:min-h-screen before:fixed before:inset-0")}
       >
         <NuqsAdapter>
           <TriangleOverlap />

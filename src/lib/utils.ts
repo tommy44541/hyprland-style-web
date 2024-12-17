@@ -15,3 +15,12 @@ export const throttle = (callback: Function, limit: number) => {
     }
   };
 };
+
+export const sleep = (ms: number, next?: () => void) => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve("success");
+      next && next()
+    }, ms);
+  });
+}

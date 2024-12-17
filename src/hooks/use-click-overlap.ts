@@ -12,25 +12,24 @@ interface TriangleConfig {
   animateSpeed: number;
 }
 
-interface ClickCanvasState {
+interface ClickOverlapState {
   triangleConfig: TriangleConfig;
   animationRunning: boolean;
   setAnimationRunning: (value: boolean) => void;
   startCell: number | null;
   setStartCell: (value: number | null) => void;
   //動畫啟動/關閉
-  status: "open" | "close";
-  setStatus: (value: "open" | "close") => void;
-  triggerAnimation: (x: number, y: number) => void;
-  resetCells: (nextAction?: any) => void;
+  status: "dark" | "light";
+  setStatus: (value: "dark" | "light") => void;
+  triggerAnimation: (x: number, y: number, next?: () => void) => void;
 }
 
-const CELL_WIDTH = 200;
+const CELL_WIDTH = 60;
 
-export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
+export const useClickOverlap = create<ClickOverlapState>((set, get) => ({
   triangleConfig: {
-    cols: 20,
-    rows: 20,
+    cols: 80,
+    rows: 80,
     opacity: .8,
     cellWidth: CELL_WIDTH,
     cellHeight: Math.round(Math.sqrt(CELL_WIDTH * CELL_WIDTH - (CELL_WIDTH/2) * (CELL_WIDTH/2))),
@@ -43,36 +42,20 @@ export const useClickCanvas = create<ClickCanvasState>((set, get) => ({
   setAnimationRunning: (value: boolean) => set({ animationRunning: value }),
   startCell: null,
   setStartCell: (value: number | null) => set({ startCell: value }),
-  status: "close",
-  setStatus: (value: "open" | "close") => set({ status: value }),
-  resetCells: (nextAction) => {
-    const { status } = get();
-    set({ 
-      status: status === 'open' ? 'close' : 'open',
-      animationRunning: true 
-    });
-    nextAction && nextAction()
-  },
-  triggerAnimation: (x: number, y: number) => {
-    const { status, animationRunning, triangleConfig } = get()
+  status: "light",
+  setStatus: (value: "dark" | "light") => set({ status: value }),
+  triggerAnimation: (x: number, y: number, next?: () => void) => {
+    const { status, triangleConfig } = get()
 
     const { cols, cellWidth, cellHeight } = triangleConfig;
 
     const col = Math.floor(x / (cellWidth / 2));
     const row = Math.floor(y / cellHeight);
     const index = row * cols + col;
-    
-    if (animationRunning) {
-      set({ 
-        startCell: index,
-        status: status === 'open' ? 'close' : 'open',
-      });
-    } else {
-      set({ 
-        startCell: index,
-        status: status === 'open' ? 'close' : 'open',
-        animationRunning: true 
-      });
-    }
+    set({ 
+      startCell: index,
+      status: status === 'dark' ? 'light' : 'dark',
+    });
+    next && next()
   },
 }))

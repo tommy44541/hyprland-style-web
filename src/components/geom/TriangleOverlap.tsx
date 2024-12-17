@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useRef, useEffect } from "react";
-import { useClickCanvas } from "@/hooks/useClickCanvas";
+import React, { useRef, useEffect, useState } from "react";
+import { useClickOverlap } from "@/hooks/use-click-overlap";
 import { cn } from "@/lib/utils";
 
 //TODO: 使用cursor控制三角形繪製區域,只有cursor匡選起來的區域才會繪製三角形
@@ -20,7 +20,9 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     animationRunning,
     startCell,
     status,
-  } = useClickCanvas();
+  } = useClickOverlap();
+
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   const { cols, rows, opacity, cellWidth, cellHeight, opacityStep, vertexStep, frameDelay, animateSpeed } = triangleConfig;
 
@@ -36,6 +38,23 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
     false, // s_override
     Math.random() * .5, //擴散延遲的隨機因子
   ]));
+
+   // 確保在瀏覽器端初始化 canvas 尺寸
+   useEffect(() => {
+    const updateCanvasSize = () => {
+      setCanvasSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    updateCanvasSize();
+    window.addEventListener("resize", updateCanvasSize);
+
+    return () => {
+      window.removeEventListener("resize", updateCanvasSize);
+    };
+  }, []);
 
   // 監聽status的變化
   useEffect(() => {
@@ -162,7 +181,7 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
           opacityStep;
         }
 
-        if (status === 'close') {
+        if (status === 'light') {
           if (isLeftSide) {
             if (Math.abs(c_right - t_right) > 0.001) {
               stable = false;
@@ -239,10 +258,10 @@ const TriangleAnimation: React.FC<TriangleAnimationProps> = () => {
   return (
     <canvas
       ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
+      width={canvasSize.width}
+      height={canvasSize.height}
       className={cn("fixed inset-0 w-full h-full m-0 p-0 z-overlay",
-        status === 'close' && "pointer-events-none"
+        status === 'dark' ? "pointer-events-auto" : "pointer-events-none"
       )}
     ></canvas>
   );
